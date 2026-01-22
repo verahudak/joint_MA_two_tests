@@ -1,0 +1,117 @@
+---
+title: "Case Study 1"
+output: html_document
+date: "2026-01-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(rstan)
+load("ultrasound_joint_data.RData")
+load("ultrasound_separate_data.RData")
+```
+
+```{r}
+# Full joint meta-analysis with varying study designs and conditional dependence
+fit_full <- stan(
+  file = "ultrasound.stan",  
+  data = ultrasound_joint_data,
+  iter = 5000,
+  warmup = 1000,
+  chains = 3,
+  control = list(adapt_delta = 0.95),
+  seed = 123
+)
+
+```
+
+```{r}
+params_to_monitor <- c(
+  "TPR_F_summary", "TPR_H_summary", 
+  "Spec_F_summary", "Spec_H_summary",
+  "OR0_summary", "OR1_summary",
+  "pred_TPR_F", "pred_TPR_H",       
+  "pred_Spec_F", "pred_Spec_H",     
+  "Sens_and", "Spec_and", 
+  "Sens_or", "Spec_or",
+  "diff_Sens", "diff_Spec",         
+  "prob_better_Sens", "prob_better_Spec", "prob_better_Both"
+)
+
+print(fit_full, pars = params_to_monitor, probs = c(0.025, 0.5, 0.975), digits_summary = 3)
+```
+
+
+```{r}
+# Joint meta-analysis with varying study designs and conditional independence
+fit_indep <- stan(
+  file = "ultrasound_indep.stan",  
+  data = ultrasound_joint_data,
+  iter = 5000,
+  warmup = 1000,
+  chains = 3,
+  control = list(adapt_delta = 0.95),
+  seed = 123
+)
+
+```
+
+
+```{r}
+# 1. Define the parameters you want to see in the summary table
+params_to_monitor <- c(
+  "TPR_F_summary", "TPR_H_summary", 
+  "Spec_F_summary", "Spec_H_summary",
+  "pred_TPR_F", "pred_TPR_H",       
+  "pred_Spec_F", "pred_Spec_H",     
+  "Sens_and", "Spec_and", 
+  "Sens_or", "Spec_or",
+  "diff_Sens", "diff_Spec",         
+  "prob_better_Sens", "prob_better_Spec", "prob_better_Both", 
+  "DOR_F", "DOR_H", "DOR_and", "DOR_or"
+)
+print(fit_indep, pars = params_to_monitor, probs = c(0.025, 0.5, 0.975), digits_summary = 3)
+```
+
+
+```{r}
+# Separate bivariate meta-analysis
+fit_sep <- stan(
+  file = "ultrasound_separate.stan",  
+  data = ultrasound_separate_data,
+  iter = 5000,
+  warmup = 1000,
+  chains = 3,
+  control = list(adapt_delta = 0.95), 
+  seed = 123
+)
+
+```
+
+
+```{r}
+params_to_monitor <- c(
+  "TPR_F_summary", "TPR_H_summary", 
+  "Spec_F_summary", "Spec_H_summary",
+  "pred_TPR_F", "pred_TPR_H",       
+  "pred_Spec_F", "pred_Spec_H",     
+  "Sens_and", "Spec_and", 
+  "Sens_or", "Spec_or",
+  "diff_Sens", "diff_Spec",         
+  "prob_better_Sens", "prob_better_Spec", "prob_better_Both"
+)
+print(fit_sep, pars = params_to_monitor, probs = c(0.025, 0.5, 0.975), digits_summary = 3)
+```
+
+
+
+
+
+
+
+
+

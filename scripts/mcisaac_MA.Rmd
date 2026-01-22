@@ -1,0 +1,118 @@
+---
+title: "Case Study 2"
+output: html_document
+date: "2026-01-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(rstan)
+load("mcisaac_joint_data.RData")
+load("mcisaac_separate_data.RData")
+```
+
+
+```{r}
+# Run Stan model
+full_m <- stan(
+  file = "mcisaac.stan",  
+  data = mcisaac_joint_data,
+  iter = 5000,
+  warmup = 1000,
+  chains = 3,
+  control = list(adapt_delta = 0.97),
+  seed = 12
+)
+
+```
+
+
+
+```{r}
+# 1. Define the parameters you want to see in the summary table
+params_to_monitor <- c(
+  "TPR_M_summary", "TPR_R_summary", 
+  "Spec_M_summary", "Spec_R_summary",
+  "OR0_summary", "OR1_summary",
+  "pred_TPR_M", "pred_TPR_R",       
+  "pred_Spec_M", "pred_Spec_R",     
+  "Sens_and", "Spec_and", 
+  "Sens_or", "Spec_or",
+  "diff_Sens", "diff_Spec",         
+  "prob_better_Sens", "prob_better_Spec", "prob_better_Both"
+)
+
+print(full_m, pars = params_to_monitor, probs = c(0.025, 0.5, 0.975), digits_summary = 3)
+```
+
+```{r}
+# Run Stan model
+indep_m <- stan(
+  file = "mcisaac_indep.stan",  
+  data = mcisaac_joint_data,
+  iter = 5000,
+  warmup = 1000,
+  chains = 3,
+  control = list(adapt_delta = 0.97),
+  seed = 123
+)
+
+```
+
+
+```{r}
+# 1. Define the parameters you want to see in the summary table
+params_to_monitor <- c(
+  "TPR_M_summary", "TPR_R_summary", 
+  "Spec_M_summary", "Spec_R_summary",
+  "pred_TPR_M", "pred_TPR_R",       
+  "pred_Spec_M", "pred_Spec_R",     
+  "Sens_and", "Spec_and", 
+  "Sens_or", "Spec_or",
+  "diff_Sens", "diff_Spec",         
+  "prob_better_Sens", "prob_better_Spec", "prob_better_Both"
+)
+
+print(indep_m, pars = params_to_monitor, probs = c(0.025, 0.5, 0.975), digits_summary = 3)
+```
+
+
+```{r}
+# Run Stan model
+sep_m <- stan(
+  file = "mcisaac_separate.stan",  
+  data = mcisaac_separate_data,
+  iter = 5000,
+  warmup = 1000,
+  chains = 3,
+  control = list(adapt_delta = 0.97),
+  seed = 123
+)
+
+```
+
+
+
+```{r}
+# 1. Define the parameters you want to see in the summary table
+params_to_monitor <- c(
+  "TPR_R_summary", "TPR_M_summary", 
+  "Spec_R_summary", "Spec_M_summary",
+  "pred_TPR_R", "pred_TPR_M",       
+  "pred_Spec_R", "pred_Spec_M",     
+  "Sens_and", "Spec_and", 
+  "Sens_or", "Spec_or",
+  "diff_Sens", "diff_Spec",         
+  "prob_better_Sens", "prob_better_Spec", "prob_better_Both"
+)
+print(sep_m, pars = params_to_monitor, probs = c(0.025, 0.5, 0.975), digits_summary = 3)
+```
+
+
+
+
+
