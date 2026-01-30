@@ -23,7 +23,7 @@ fit_full <- stan(
   iter = 5000,
   warmup = 1000,
   chains = 3,
-  control = list(adapt_delta = 0.95),
+  control = list(adapt_delta = 0.97),
   seed = 123
 )
 
@@ -54,7 +54,7 @@ fit_indep <- stan(
   iter = 5000,
   warmup = 1000,
   chains = 3,
-  control = list(adapt_delta = 0.95),
+  control = list(adapt_delta = 0.97),
   seed = 123
 )
 
@@ -71,8 +71,7 @@ params_to_monitor <- c(
   "Sens_and", "Spec_and", 
   "Sens_or", "Spec_or",
   "diff_Sens", "diff_Spec",         
-  "prob_better_Sens", "prob_better_Spec", "prob_better_Both", 
-  "DOR_F", "DOR_H", "DOR_and", "DOR_or"
+  "prob_better_Sens", "prob_better_Spec", "prob_better_Both"
 )
 print(fit_indep, pars = params_to_monitor, probs = c(0.025, 0.5, 0.975), digits_summary = 3)
 ```
@@ -86,7 +85,7 @@ fit_sep <- stan(
   iter = 5000,
   warmup = 1000,
   chains = 3,
-  control = list(adapt_delta = 0.95), 
+  control = list(adapt_delta = 0.97), 
   seed = 123
 )
 
