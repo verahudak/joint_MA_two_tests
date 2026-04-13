@@ -1,0 +1,168 @@
+---
+title: "Untitled"
+output: html_document
+date: "2026-03-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Fit Novielli model 
+
+Start with femur first: condition humerus on femur results
+
+Data
+
+```{r}
+# Data
+N_studies <- 5      
+
+# Full data
+# H+F+, H-F+, H+F-, H-F-
+y_d <- matrix(c(
+  9, 1, 3, 11,  
+  17, 6, 0, 9,  
+  20, 2, 0, 23, 
+  10, 3, 0, 14, 
+  8, 3, 3, 31   
+), nrow = N_studies, byrow = TRUE)
+
+# H+F+, H-F+, H+F-, H-F-
+y_nd <- matrix(c(
+  19, 21, 6, 354,  
+  23, 40, 11, 514, 
+  1, 3, 2, 100,  
+  31, 29, 29, 411, 
+  15, 29, 27, 871  
+), nrow = N_studies, byrow = TRUE)
+
+# Indices based columns: 1:H+F+, 2:H-F+, 3:H+F-, 4:H-F-
+
+stan_data <- list(
+  N_studies = 5,
+  K = 2, # Two strata: Femur Negative (1) and Femur Positive (2)
+  
+  # Total Diseased in each Femur stratum
+  # d[,1] is Femur Negative (Col 3 + 4); d[,2] is Femur Positive (Col 1 + 2)
+  d = cbind(y_d[,3] + y_d[,4], y_d[,1] + y_d[,2]),
+  
+  # Total Healthy in each Femur stratum
+  # h[,1] is Femur Negative (Col 3 + 4); h[,2] is Femur Positive (Col 1 + 2)
+  h = cbind(y_nd[,3] + y_nd[,4], y_nd[,1] + y_nd[,2]),
+  
+  # Humerus True Positives (H+) among Diseased
+  # tp[,1] is H+ in Femur Neg stratum; tp[,2] is H+ in Femur Pos stratum
+  tp = cbind(y_d[,3], y_d[,1]),
+  
+  # Humerus True Negatives (H-) among Healthy
+  # tn[,1] is H- in Femur Neg stratum; tn[,2] is H- in Femur Pos stratum
+  tn = cbind(y_nd[,4], y_nd[,2])
+)
+```
+
+
+```{r}
+
+fit_novielli <- stan(
+  file = "novielli.stan",  
+  data = stan_data,
+  iter = 5000,
+  warmup = 1000,
+  chains = 3, control = list(adapt_delta = 0.99, max_treedepth = 15))
+
+```
+
+
+```{r}
+# Parameters to monitor for femur first
+params_femur_first <- c(
+  "sens_femur", "spec_femur", 
+  "sens_hum_if_fem_pos", "spec_hum_if_fem_pos", 
+  "sens_hum_if_fem_neg", "spec_hum_if_fem_neg",
+  "sens_humerus_overall", "spec_humerus_overall",
+  "joint_sens_or_f1st", "joint_spec_or_f1st",
+  "joint_sens_and_f1st", "joint_spec_and_f1st"
+)
+
+print(fit_novielli, pars = params_femur_first, probs = c(0.025, 0.5, 0.975), digits_summary = 3)
+```
+
+
+Switch it around:
+
+Humerus first, condition femur resulst on humerus outcome
+
+```{r}
+# Full data
+# H+F+, H-F+, H+F-, H-F-
+y_d <- matrix(c(
+  9, 1, 3, 11,  
+  17, 6, 0, 9,  
+  20, 2, 0, 23, 
+  10, 3, 0, 14, 
+  8, 3, 3, 31   
+), nrow = N_studies, byrow = TRUE)
+
+# H+F+, H-F+, H+F-, H-F-
+y_nd <- matrix(c(
+  19, 21, 6, 354,  
+  23, 40, 11, 514, 
+  1, 3, 2, 100,  
+  31, 29, 29, 411, 
+  15, 29, 27, 871  
+), nrow = N_studies, byrow = TRUE)
+
+# Mapping for Humerus First (Test 1 = Humerus, Test 2 = Femur)
+stan_data_humerus_first <- list(
+  N_studies = 5,
+  
+  # Total Diseased in each Humerus stratum
+  # d[,1] is Humerus Negative (Col 2:H-F+ + Col 4:H-F-)
+  # d[,2] is Humerus Positive (Col 1:H+F+ + Col 3:H+F-)
+  d = cbind(y_d[,2] + y_d[,4], y_d[,1] + y_d[,3]),
+  
+  # Total Healthy in each Humerus stratum
+  # h[,1] is Humerus Negative (Col 2:H-F+ + Col 4:H-F-)
+  # h[,2] is Humerus Positive (Col 1:H+F+ + Col 3:H+F-)
+  h = cbind(y_nd[,2] + y_nd[,4], y_nd[,1] + y_nd[,3]),
+  
+  # Femur True Positives (F+) among Diseased
+  # tp[,1] is F+ in Humerus Neg stratum (Col 2); tp[,2] is F+ in Humerus Pos stratum (Col 1)
+  tp = cbind(y_d[,2], y_d[,1]),
+  
+  # Femur True Negatives (F-) among Healthy
+  # tn[,1] is F- in Humerus Neg stratum (Col 4); tn[,2] is F- in Humerus Pos stratum (Col 3)
+  tn = cbind(y_nd[,4], y_nd[,3])
+)
+```
+
+
+```{r}
+
+fit_novielli_h <- stan(
+  file = "novielli.stan",  
+  data = stan_data_humerus_first,
+  iter = 5000,
+  warmup = 1000,
+  chains = 3, control = list(adapt_delta = 0.99, max_treedepth = 15))
+
+```
+
+
+```{r}
+# Parameters to monitor for humerus first
+params_humerus_first <- c(
+  "sens_humerus", "spec_humerus",
+  "sens_femur_overall", "spec_femur_overall",
+  "sens_fem_if_hum_pos", "spec_fem_if_hum_pos",
+  "sens_fem_if_hum_neg", "spec_fem_if_hum_neg",
+  "joint_sens_or_h1st", "joint_spec_or_h1st",
+  "joint_sens_and_h1st", "joint_spec_and_h1st"
+)
+print(fit_novielli_h, pars = params_humerus_first, probs = c(0.025, 0.5, 0.975), digits_summary = 3)
+```
+
+
+
