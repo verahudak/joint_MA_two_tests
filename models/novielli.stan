@@ -38,8 +38,8 @@ model {
 
   for (i in 1:N_studies) {
     // Likelihood for Test 1
-    target += binomial_logit_lpmf(d[i, 2] | (d[i, 1] + d[i, 2]), theta_t1[i, 1]);
-    target += binomial_logit_lpmf(h[i, 1] | (h[i, 1] + h[i, 2]), theta_t1[i, 2]);
+    d[i, 2] ~ binomial_logit(d[i, 1] + d[i, 2], theta_t1[i, 1]);
+    h[i, 1] ~ binomial_logit(h[i, 1] + h[i, 2], theta_t1[i, 2]);
     
     theta_t1[i] ~ normal(mu_t1, sigma_t1);
 
